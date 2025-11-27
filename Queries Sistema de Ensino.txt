@@ -1,0 +1,114 @@
+
+ALTER TABLE notas      ADD INDEX (id_aluno), ADD INDEX (curso_id);
+ALTER TABLE turmas     ADD INDEX (curso_id), ADD INDEX (professor_id);
+ALTER TABLE matriculas ADD INDEX (id_aluno), ADD INDEX (turma_id);
+
+### Ver 'raio x' das tabelas criadas
+show table status where Name in ('alunos', 'cursos', 'professores', 'turmas', 'notas', 'matriculas');
+
+### Verificar quantidade de alunos inseridos
+select count(*) AS alunos_qntd, MAX (id_aluno) from alunos; 
+
+select * from alunos;
+
+### Selecionar cursos com preco abaixo de 1000 ordenados pelo preco em ordem decrescente, trazendo tambem a carga_horaria
+select nome_curso, carga_horaria from cursos where preco < 1000 order by preco desc;
+
+### Selecionar colunas especificas da tabela alunos
+
+use sistema_de_ensino;
+
+select id_aluno, nome, telefone from alunos;
+
+select * from alunos;
+
+select * from alunos where nome like '%Costa';
+
+### Alunos que nasceram em determinado periodo
+select * from alunos where data_nascimento between '2005-01-01' and '2006-12-31';
+
+### Aluno com matricula, nome e curso
+select a.id_aluno, a.nome, m.data_matricula, t.horario, c.nome_curso
+from alunos a
+join matriculas m ON m.id_aluno = a.id_aluno
+join turmas t ON t.turma_id = m.turma_id
+join cursos c ON c.curso_id = t.curso_id
+where a.id_aluno = 8;
+
+### Notas por alunos
+select a.nome, c.nome_curso, n.nota
+from notas n 
+join alunos a ON a.id_aluno = n.id_aluno
+join cursos c ON c.curso_id = n.curso_id
+order by nome asc;
+
+### Média de nota por curso
+select c.nome_curso, round(avg(n.nota),2) AS media
+from notas n 
+join cursos c ON c.curso_id = n.curso_id
+group by c.curso_id, c.nome_curso
+order by media DESC;
+
+### Total de alunos matriculados por curso
+SELECT t.turma_id, c.nome_curso, count(m.id_matricula) AS alunos_matriculados
+from turmas t
+left join matriculas m ON m.turma_id = t.turma_id
+left join cursos c ON c.curso_id = t.curso_id
+group by t.turma_id, c.nome_curso;
+
+### Total de turmas por professor
+SELECT p.professor_id, p.nome, count(t.turma_id) AS total_turmas
+from professores p      
+left join turmas t ON t.professor_id = p.professor_id
+group by p.professor_id, p.nome;
+
+### Aluno sem matricula
+select a.id_aluno, a.nome
+from alunos a 
+where not exists (
+    select 1 from matriculas m where m.id_aluno = a.id_aluno     
+);
+
+### Adicionar novo aluno
+insert into alunos(nome, endereco, telefone, data_nascimento) values
+('Halina Oliveira', 'Rua Z, 999', '11911112222', '1999-02-28');
+
+select * from alunos;
+
+### Atualizar telefone do aluno
+update alunos
+set telefone = '11933334444'
+where id_aluno = 30;
+
+### Apagar registro
+delete from matriculas where id_matricula = 10;
+
+select * from matriculas;
+
+### Inserir curso com verificação de duplicidade
+insert into cursos (curso_id, nome_curso, carga_horaria, preco) values 
+(66, 'Banco de Dados', 400, 800.00)
+ON duplicate key update
+preco = values(preco), carga_horaria = values(carga_horaria);
+
+select * from cursos where nome_curso = 'Banco de dados';
+
+select * from cursos;
+
+show create table cursos;
+describe cursos;
+
+### Criar índice para otimização de consultas
+alter table notas add index idx_notas_alunos (id_aluno);
+
+SELECT * FROM notas USE INDEX (idx_notas_aluno)
+WHERE id_aluno = 10;
+
+EXPLAIN SELECT * FROM notas WHERE id_aluno = 5;
+
+
+
+
+
+
+
